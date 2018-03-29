@@ -18,8 +18,16 @@ import java.io.Reader;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 
+/**
+ * Dual Axis plot for the given task: statistic correlation between the given statistic entities
+ * DISCLAIMER: Credit goes to the team of JFreeChart, it's classes are
+ * used/extended.
+ */
 public class DP_LinePlot extends ApplicationFrame{
 
+    /**
+     * data sets to be read from files
+     */
     private static XYSeriesCollection dataset1;
     private static XYSeriesCollection dataset2;
 
@@ -27,9 +35,13 @@ public class DP_LinePlot extends ApplicationFrame{
     public DP_LinePlot(String title) {
         super(title);
         loadData();
-        setContentPane(createDPPanel( ));
+        setContentPane(createDPPanel());
     }
 
+    /**
+     * method for creating a panel out of the chart, to use it in a window frame
+     * @return finished panel
+     */
     private JPanel createDPPanel() {
         JFreeChart chart = createChart();
         chart.setBackgroundPaint(Color.WHITE);
@@ -37,16 +49,24 @@ public class DP_LinePlot extends ApplicationFrame{
         return chartPanel;
     }
 
+    /**
+     * loads the raw data from the specific csv files and filters out all data which is out
+     * of the investigated time frame. They are located in
+     * src/main/resources.
+     * DISCLAIMER: credit goes to the team opencsv, it's reader/parsers are used to handle the
+     * csv input.
+     */
     private void loadData() {
         XYSeries temperature = new XYSeries("temperature");
         XYSeries unemployment = new XYSeries("unemployment");
+        //additional parser to exclude default ',' separator (european comma)
         final CSVParser parser = new CSVParserBuilder().withSeparator(';').build();
 
         try (
                 Reader reader =
                         Files.newBufferedReader(Paths.get("src/main/resources/labour-szg.csv"));
                 CSVReader csvReader =
-                        new CSVReaderBuilder(reader).withSkipLines(3).withCSVParser(parser).build();
+                        new CSVReaderBuilder(reader).withSkipLines(3).withCSVParser(parser).build()
         ){
             String[] nextRecord;
             int currentYear;
@@ -66,7 +86,7 @@ public class DP_LinePlot extends ApplicationFrame{
                 Reader reader =
                         Files.newBufferedReader(Paths.get("src/main/resources/tab_1.3.1_klimaundwetter_.csv"));
                 CSVReader csvReader =
-                        new CSVReaderBuilder(reader).withSkipLines(3).withCSVParser(parser).build();
+                        new CSVReaderBuilder(reader).withSkipLines(3).withCSVParser(parser).build()
         ){
             String[] nextRecord;
             int currentYear;
@@ -79,6 +99,7 @@ public class DP_LinePlot extends ApplicationFrame{
                         temperature.add(currentYear, Double.parseDouble(nextRecord[1].replace(',', '.')));
                     }
                 } catch (NumberFormatException e) {
+                    //Exception occurs at the last line due to a data source statement
                     System.out.println("Could not convert to number: " + nextRecord.toString());
                 }
             }
@@ -92,6 +113,11 @@ public class DP_LinePlot extends ApplicationFrame{
         dataset2.addSeries(unemployment);
     }
 
+    /**
+     * method for creating a chart with the necessary settings to display both Y-axis
+     * in a readable way
+     * @return finished chart
+     */
     private static JFreeChart createChart() {
         XYPlot plot = new XYPlot();
         plot.setDataset(0, dataset1);
@@ -114,11 +140,10 @@ public class DP_LinePlot extends ApplicationFrame{
 
         plot.mapDatasetToRangeAxis(0, 0);
         plot.mapDatasetToRangeAxis(1, 1);
-        
+
         JFreeChart chart = new JFreeChart("Correlation between Annual avg. temperature of Vienna/Unemployment in Salzburg", Font.getFont("Serif"), plot, true);
         return chart;
     }
-    
 
     public static void main(String[] args) {
         DP_LinePlot linePlot = new DP_LinePlot("Digital Preservation 2018 ue1.1");
